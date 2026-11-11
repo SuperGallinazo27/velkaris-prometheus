@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "mode": "demo",
+  "description": "Ejemplos inventados exclusivamente para probar la interfaz y el algoritmo. Los nombres identifican lugares conocidos, pero los valores no describen sus terrenos reales. Las coordenadas terrestres son marcadores orientativos, no polígonos de estudio.",
+  "mars": [
+    {"id": "jezero", "name": "Jezero · ejemplo sintético", "relief_m": 900, "slope_deg": 8, "roughness_m": 35},
+    {"id": "gale", "name": "Gale · ejemplo sintético", "relief_m": 1700, "slope_deg": 14, "roughness_m": 60},
+    {"id": "elysium", "name": "Elysium Planitia · ejemplo sintético", "relief_m": 300, "slope_deg": 4, "roughness_m": 15}
+  ],
+  "earth": [
+    {"id": "atacama", "name": "Atacama, Chile", "lat": -24.5, "lon": -69.2, "relief_m": 800, "slope_deg": 7, "roughness_m": 30},
+    {"id": "cotopaxi", "name": "Cotopaxi, Ecuador", "lat": -0.68, "lon": -78.44, "relief_m": 1800, "slope_deg": 16, "roughness_m": 65},
+    {"id": "lanzarote", "name": "Lanzarote, España", "lat": 29.0, "lon": -13.6, "relief_m": 350, "slope_deg": 5, "roughness_m": 20}
+  ]
+}
