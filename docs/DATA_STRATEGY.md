@@ -8,8 +8,10 @@ transporte reutilizable de JSON + una página STAC, probado con mocks.
 
 Los cinco módulos por fuente exponen capacidades y fallan con 503 en `live`.
 Son **contratos de integración**, no clientes científicos completos. Añadir una
-clave no los activa. GEE y lectura COG por ventanas son estrategias documentadas,
-no rutas operativas en este servicio. No se anuncia tiempo real: los archivos
+clave no los activa. Un sexto conector, **Google Earth Engine**, implementa reducción
+remota NASADEM/MODIS por coordenadas: [configuración y contrato](EARTH_ENGINE.md).
+La lectura COG sigue siendo una estrategia pendiente de implementación.
+No se anuncia tiempo real: los archivos
 planetarios y satelitales tienen fechas de adquisición, latencias y revisiones.
 
 ## Flujo propuesto por producto
@@ -83,13 +85,14 @@ intercambiables; esta API las distingue.
 | Cuerpo de análisis | 16 KiB contados durante recepción; 413 al exceder |
 | Archivo reducido | lectura de hasta 1 MiB + 1 byte; 503 al exceder |
 | Regiones | 1–100 objetivos, 3–100 candidatos; siempre Top 3 |
-| Petición | 15 s incluyendo espera, cuerpo y análisis; 503 al agotar |
+| Petición | 35 s incluyendo espera, cuerpo y análisis; 503 al agotar |
 | Cálculos simultáneos | 4 por proceso; Uvicorn limita 32 conexiones/tareas |
 | Transporte JSON auxiliar | 1 MiB, deadline total de 8 s, HTTPS/hosts aprobados, sin redirects |
 | STAC auxiliar | una página, máximo 20 items; no sigue `next` ni activos |
 | Rásteres | ninguno se abre ni descarga en la API actual |
+| Worker GEE | 25 s, 64 KiB de salida, una consulta simultánea; seis nuevas por minuto/proceso |
 
-Para futuros workers, adoptar inicialmente 512×512 píxeles efectivos por banda
+Para futuros workers COG, adoptar inicialmente 512×512 píxeles efectivos por banda
 (262144), pocas bandas y una AOI/intervalo temporal máximos por colección;
 rechazar consultas mayores. `QueryBudget.max_pixels` reserva ese presupuesto,
 pero **no es un límite de ráster activo**, porque no existe lector de ráster en

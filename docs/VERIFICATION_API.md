@@ -1,5 +1,28 @@
 # Verificación de la API — 2026-11-14
 
+## Ampliación Google Earth Engine
+
+- SDK oficial instalado: `earthengine-api==1.7.52`, Python 3.14.10.
+- Suite completa: **112 passed, 11 subtests passed** (4.76 s); `pip check` correcto.
+- Se construyó y serializó el grafo NASADEM/MODIS usando el SDK oficial y sus
+  definiciones de algoritmos de prueba, sin llamadas de red ni autenticación.
+- Se comprobaron GeoJSON, metadatos, máscara/nulos en el contrato, límites de
+  consultas, caché, método/resolución de objetivos, timeout, cancelación y tope
+  de respuesta. Se ejecutó el worker real con una ruta inexistente para verificar
+  el error de credenciales y que no exponga rutas ni claves.
+- Las respuestas numéricas de las pruebas son fixtures TEST sintéticos; no son
+  mediciones Google/NASA. No se comprobó acceso real a Earth Engine ni resultados
+  geoespaciales contra observaciones de campo. El propietario configurará el
+  proyecto y credenciales después en Render; GEE permanece desactivado por defecto.
+- `prometheus/data.py`, `prometheus/ranking.py`, Streamlit y demo original intactos.
+- Frontend separado inspeccionado: Vite con `VITE_API_BASE_URL`, todavía usa datos
+  demo locales. No se modificó su repositorio en esta ampliación.
+- En macOS Intel se instaló el SDK con `pip --only-binary=:all:` para elegir una
+  rueda compatible de cryptography y evitar compilar Rust. No se modificó Python
+  global. Persiste la advertencia de deprecación de httpx/TestClient ya registrada.
+
+## Entrega inicial FastAPI
+
 - Base inspeccionada: `main`, commit `4c6ba82c36324ddc51ea8b70a5994685324c143b`.
 - Rama de trabajo: `feat/fastapi-render`; sin cambios en los archivos originales
   `prometheus/data.py`, `prometheus/ranking.py`, `app.py` ni `data/demo.json`.

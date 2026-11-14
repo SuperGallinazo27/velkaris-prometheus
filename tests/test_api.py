@@ -103,7 +103,7 @@ def test_live_connectors_honestly_unavailable(client, source):
 
 def test_health_sources_and_openapi(client):
     assert client.get("/health").json()["live_sources_ready"] is False
-    assert len(client.get("/api/v1/sources").json()["sources"]) == 5
+    assert len(client.get("/api/v1/sources").json()["sources"]) == 6
     schema = client.get("/openapi.json").json()
     assert "AnalyzeRequest" in schema["components"]["schemas"]
     assert "503" in schema["paths"]["/api/v1/analyze"]["post"]["responses"]

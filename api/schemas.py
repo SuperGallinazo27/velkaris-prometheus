@@ -1,6 +1,7 @@
 """Strict request, reduced-descriptor, response and GeoJSON contracts."""
 
 from typing import Annotated, Literal
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -9,7 +10,7 @@ Nonnegative = Annotated[Finite, Field(ge=0, le=1e9)]
 Text = Annotated[str, Field(strict=True, min_length=1, max_length=500)]
 Identifier = Annotated[str, Field(strict=True, min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.-]+$")]
 Mission = Literal["mars", "moon"]
-Source = Literal["nasa_earthdata", "esa_copernicus", "jaxa_gportal", "csa_radarsat", "nasa_pds_diviner"]
+Source = Literal["nasa_earthdata", "esa_copernicus", "jaxa_gportal", "csa_radarsat", "nasa_pds_diviner", "google_earth_engine"]
 
 
 class StrictModel(BaseModel):
@@ -28,17 +29,57 @@ class Weights(StrictModel):
         return self
 
 
+class EarthLocation(StrictModel):
+    id: Identifier
+    name: Text
+    lat: Annotated[Finite, Field(ge=-55.9, le=59.9)]
+    lon: Annotated[Finite, Field(ge=-179.9, le=179.9)]
+
+
+class EarthEngineQuery(StrictModel):
+    sites: Annotated[list[EarthLocation], Field(min_length=1, max_length=9)] | None = None
+    bbox: tuple[Finite, Finite, Finite, Finite] | None = None
+    window_m: Annotated[int, Field(strict=True, ge=1000, le=5000)] = 3000
+    start_date: date | None = None
+    end_date: date | None = None
+
+    @model_validator(mode="after")
+    def bounded_query(self):
+        if (self.sites is None) == (self.bbox is None):
+            raise ValueError("Indique sites o bbox, exclusivamente uno.")
+        if self.sites and len({site.id for site in self.sites}) != len(self.sites):
+            raise ValueError("Los IDs de sites deben ser únicos.")
+        if self.bbox:
+            west, south, east, north = self.bbox
+            if not (-179.9 <= west < east <= 179.9 and -55.9 <= south < north <= 59.9):
+                raise ValueError("bbox debe ser [oeste,sur,este,norte] dentro de la cobertura NASADEM, sin cruzar el antimeridiano.")
+            if east - west > 1 or north - south > 1:
+                raise ValueError("bbox máximo: 1 grado por eje; se muestrean nueve centros, no toda la zona.")
+        if (self.start_date is None) != (self.end_date is None):
+            raise ValueError("Para temperatura se requieren start_date y end_date juntos.")
+        if self.start_date and not (date(2000, 2, 18) <= self.start_date < self.end_date <= date.today()):
+            raise ValueError("Fechas MODIS inválidas; end_date es exclusivo y no futuro.")
+        if self.start_date and (self.end_date - self.start_date).days > 32:
+            raise ValueError("Periodo térmico máximo: 32 días.")
+        if self.start_date and self.window_m < 3000:
+            raise ValueError("MODIS requiere window_m de al menos 3000 m para este muestreo.")
+        return self
+
+
 class AnalyzeRequest(StrictModel):
     mission_type: Mission = "mars"
     target_id: Identifier = "jezero"
     data_mode: Literal["demo", "external", "live"] = "demo"
     weights: Weights = Field(default_factory=Weights)
     source: Source | None = None
+    earth_engine: EarthEngineQuery | None = None
 
     @model_validator(mode="after")
     def source_matches_mode(self):
         if (self.data_mode == "live") != (self.source is not None):
             raise ValueError("source es obligatorio y exclusivo de data_mode=live.")
+        if (self.source == "google_earth_engine") != (self.earth_engine is not None):
+            raise ValueError("earth_engine es obligatorio y exclusivo de source=google_earth_engine.")
         return self
 
 
@@ -131,7 +172,7 @@ class FeatureProperties(StrictModel):
     name: str
     rank: int
     normalized_distance: Nonnegative
-    data_mode: Literal["demo", "external"]
+    data_mode: Literal["demo", "external", "live"]
     synthetic: bool
 
 
@@ -149,7 +190,8 @@ class FeatureCollection(StrictModel):
 
 class AnalyzeResponse(StrictModel):
     mission_type: Mission
-    data_mode: Literal["demo", "external"]
+    data_mode: Literal["demo", "external", "live"]
+    source: Source | None = None
     synthetic: bool
     target: Region
     weights: Weights

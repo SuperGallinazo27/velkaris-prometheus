@@ -31,12 +31,16 @@ prometheus/data.py          validación original sin modificar
 Todos los campos tienen los valores por defecto del ejemplo. `mission_type`:
 `mars|moon`; `data_mode`: `demo|external|live`. Demo ofrece `jezero`, `gale` y
 `elysium`. `external` lee el archivo reducido configurado por el operador;
-`live` requiere `source` y actualmente responde 503 porque la extracción de
-productos científicos no está implementada. Nunca cambia silenciosamente a demo.
+`live` requiere `source`. `google_earth_engine` está implementado para NASADEM/MODIS
+y requiere el objeto `earth_engine` y configuración del servidor. Los otros cinco
+conectores aún responden 503. Nunca cambia silenciosamente a demo.
 
 `source` admite `nasa_earthdata`, `esa_copernicus`, `jaxa_gportal`, `csa_radarsat`
-y `nasa_pds_diviner`; no se acepta fuera del modo live. No se reciben URLs,
+y `nasa_pds_diviner`, además de `google_earth_engine`; no se acepta fuera del modo live. No se reciben URLs,
 credenciales, rásteres ni datasets arbitrarios del navegador.
+
+`POST /api/v1/earth-engine/locations` consulta coordenadas o una bbox para devolver
+GeoJSON con descriptores y procedencia. [Contrato GEE completo](EARTH_ENGINE.md).
 
 Los pesos son números finitos no negativos (hasta 1e9); al menos uno positivo.
 Un peso omitido conserva el valor 1. Para excluir una variable, mandar 0.
@@ -72,7 +76,7 @@ y reporte de incertidumbre. No existe aquí esa calibración.
 
 | Campo | Significado |
 |---|---|
-| `data_mode`, `synthetic` | Identificación explícita de demo o externo |
+| `data_mode`, `synthetic` | Identificación explícita de demo, externo o live |
 | `target` | Descriptores disponibles y procedencia declarada |
 | `weights` | Pesos normalizados, suman aproximadamente 1 |
 | `top_3` | Tres objetos con `rank`, `site`, `normalized_distance`, `differences` e indicadores |
@@ -109,6 +113,7 @@ La mineralogía no forma parte de la lógica actual.
 | 422 | Entrada inválida, misión/objetivo ausente, todos los pesos cero, faltan variables activas |
 | 503 | Archivo real no configurado, inválido o demasiado grande; live no implementado; timeout/proveedor |
 | 413 | Cuerpo recibido mayor que 16 KiB, incluso con transferencia por fragmentos |
+| 429 | Presupuesto de consultas Earth Engine excedido |
 
 Los errores controlados comparten `detail.code` y `detail.message`. No se
 exponen rutas locales, credenciales ni respuestas crudas de proveedores.
@@ -167,7 +172,7 @@ no certifica validez científica.
 ## Consumo desde Vercel
 
 ```javascript
-const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/analyze`, {
+const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/analyze`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ mission_type: "mars", target_id: "jezero", data_mode: "demo" })
@@ -179,5 +184,5 @@ if (!response.ok) throw new Error(data.detail?.message ?? "API no disponible");
 // data.geojson puede consumirse en MapLibre/Leaflet como FeatureCollection.
 ```
 
-Configurar `NEXT_PUBLIC_API_URL` con la URL HTTPS de Render; no incluye secretos.
+El frontend separado es Vite: configurar `VITE_API_BASE_URL` con la URL HTTPS de Render; no incluye secretos.
 Las credenciales científicas pertenecen exclusivamente al backend/worker.

@@ -10,6 +10,10 @@ Vercel. `POST /api/v1/analyze` entrega Top 3, GeoJSON y procedencia; la demo fun
 sin cuentas externas. La lógica original de `prometheus/data.py` y
 `prometheus/ranking.py` se conserva. Los conectores por agencia son contratos
 explícitos pendientes de extracción por producto, no integraciones en vivo terminadas.
+El conector **Google Earth Engine sí está implementado** mediante `earthengine-api`:
+muestrea coordenadas o nueve centros de una zona y reduce NASADEM/MODIS en la nube.
+Requiere activar el proyecto y sus credenciales en Render; no se verificó acceso
+real con una cuenta Google en esta entrega. [Integración y activación GEE](docs/EARTH_ENGINE.md).
 
 ## API: inicio rápido
 
@@ -60,7 +64,8 @@ líneas de activación e inicio. En VS Code selecciona `.venv/bin/python` como i
 también está incluida la tarea **Iniciar PROMETHEUS** (Terminal → Ejecutar tarea).
 `requirements.txt` incluye Streamlit y la API; cada interfaz tiene su comando de inicio.
 La instalación y el fondo del mapa necesitan internet. El cálculo usa archivos locales,
-no requiere cuentas, claves API ni servicios de pago.
+no requiere cuentas, claves API ni servicios de pago en modo demo. El modo GEE
+requiere proyecto Google Cloud autorizado y está desactivado por defecto.
 
 ## Archivos
 

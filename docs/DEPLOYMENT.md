@@ -38,7 +38,7 @@ de `render.yaml`; por eso un fallo de `vercel build` no es un despliegue Render.
 [Configuración Git de Vercel](https://vercel.com/docs/project-configuration/git-configuration).
 
 El frontend debe mantenerse en su propio proyecto/repositorio Vercel y consumir
-la URL HTTPS del backend Render mediante `NEXT_PUBLIC_API_URL`. Este repositorio
+la URL HTTPS del backend Render mediante `VITE_API_BASE_URL`. Este repositorio
 no contiene una aplicación frontend Vercel. Para desvincularlo también en el
 panel, usar Project Settings → Git → Disconnect en el proyecto Vercel del backend.
 
@@ -63,8 +63,14 @@ Comportamiento conforme a [CORS de FastAPI](https://fastapi.tiangolo.com/tutoria
 
 CORS controla el acceso desde navegadores; no es autenticación ni impide llamadas
 desde curl/servidores. Antes de habilitar consultas científicas con cuota o coste,
-añadir autenticación y rate limiting en el gateway. La entrega actual no ejecuta
-consultas científicas facturables.
+añadir autenticación y rate limiting en el gateway. La configuración predeterminada
+mantiene Earth Engine desactivado; habilitarlo sí permite consultas a Google.
+
+Google Earth Engine está implementado pero desactivado inicialmente. Para activarlo
+después, configurar el proyecto, Secret File y variables de [EARTH_ENGINE.md](EARTH_ENGINE.md).
+El frontend separado usa Vite y sus variables `VITE_*` son públicas: nunca incluir
+credenciales Google en ellas. La comprobación de acceso real está pendiente de
+esa configuración; las pruebas automatizadas no consumen datos ni cuotas Google.
 
 ## Comprobación tras desplegar
 

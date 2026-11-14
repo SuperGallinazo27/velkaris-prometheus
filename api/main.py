@@ -9,6 +9,7 @@ from api.config import Settings
 from api.errors import AnalysisError
 from api.middleware import ResourceLimitsMiddleware
 from api.routers.analysis import router
+from api.services.earth_engine import EarthEngineService
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -16,6 +17,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="PROMETHEUS API", version="1.0.0",
                   description="Análogos exploratorios con demo sintética explícita; sin porcentajes calibrados.")
     app.state.settings = settings
+    app.state.earth_engine = EarthEngineService(settings)
     app.state.analysis_slots = asyncio.Semaphore(4)
     app.add_middleware(ResourceLimitsMiddleware, max_body_bytes=settings.max_body_bytes,
                        timeout_seconds=settings.request_timeout_seconds)
@@ -39,7 +41,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health", tags=["operations"])
     async def health():
-        return {"status": "ok", "default_data_mode": "demo", "live_sources_ready": False}
+        return {"status": "ok", "default_data_mode": "demo", "live_sources_ready": False,
+                "earth_engine_configured": app.state.earth_engine.status()["status"] == "configured_unverified"}
 
     app.include_router(router)
     return app
