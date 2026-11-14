@@ -5,6 +5,42 @@ topográfica con tres candidatos terrestres, mapa, ranking y exportación CSV.
 **Todos los datos incluidos son demostrativos y sintéticos.** No contiene datos
 NASA, porcentajes de similitud, IA entrenada ni validación científica.
 
+También incluye una **API REST FastAPI modular**, preparada para Render y un frontend
+Vercel. `POST /api/v1/analyze` entrega Top 3, GeoJSON y procedencia; la demo funciona
+sin cuentas externas. La lógica original de `prometheus/data.py` y
+`prometheus/ranking.py` se conserva. Los conectores por agencia son contratos
+explícitos pendientes de extracción por producto, no integraciones en vivo terminadas.
+
+## API: inicio rápido
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-api.txt
+export CORS_ORIGINS=http://localhost:3000
+uvicorn api.main:app --host 127.0.0.1 --port 8000
+```
+
+```bash
+curl -sS http://localhost:8000/api/v1/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{"mission_type":"mars","target_id":"jezero","data_mode":"demo","weights":{"relief_m":1,"slope_deg":1,"roughness_m":1}}'
+```
+
+Documentación interactiva: `http://localhost:8000/docs`; contrato OpenAPI:
+`/openapi.json`; salud: `/health`; capacidades por fuente: `/api/v1/sources`.
+`mission_type` acepta `mars` y `moon`, pero la demo existente solo tiene Marte.
+No se inventó un dataset lunar ni información térmica.
+
+- [Contrato, respuestas, datos externos y frontend](docs/API.md)
+- [Render, variables de entorno y comprobación](docs/DEPLOYMENT.md)
+- [Estrategia geoespacial, fuentes y límites](docs/DATA_STRATEGY.md)
+
+`render.yaml` instala solo `requirements-api.txt` para evitar Streamlit, pandas,
+GDAL o rásteres en el servicio web. La configuración CORS acepta únicamente
+orígenes exactos declarados en `CORS_ORIGINS`; vacía no habilita ningún origen.
+No se permite `*`, tampoco para previews Vercel.
+
 ## Ejecutar en Mac y VS Code
 
 Requiere Python 3.11 o posterior. Abre esta carpeta en VS Code y ejecuta en su terminal:
@@ -19,7 +55,7 @@ python -m streamlit run app.py
 Abre http://localhost:8501. Para detener: Ctrl+C. Para abrir de nuevo, ejecuta las
 líneas de activación e inicio. En VS Code selecciona `.venv/bin/python` como intérprete;
 también está incluida la tarea **Iniciar PROMETHEUS** (Terminal → Ejecutar tarea).
-Solo Streamlit es dependencia directa; instala sus propias dependencias.
+`requirements.txt` incluye Streamlit y la API; cada interfaz tiene su comando de inicio.
 La instalación y el fondo del mapa necesitan internet. El cálculo usa archivos locales,
 no requiere cuentas, claves API ni servicios de pago.
 
@@ -40,6 +76,9 @@ No se compara elevación absoluta entre planetas, ni geología, clima o accesibi
 ## Verificar
 
 ```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+# Solo las pruebas originales (unittest):
 python -m unittest discover -s tests -v
 ```
 
