@@ -69,9 +69,11 @@ GEE_PROJECT_ID=<ID del proyecto registrado>
 GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/earth-engine-service-account.json
 ```
 
-El Blueprint incluye `GEE_ENABLED=false` inicialmente. Al activar de forma
-permanente un servicio gestionado por Blueprint, actualizar también ese valor
-en su configuración declarativa para que futuras sincronizaciones no lo reviertan.
+El Blueprint solicita `GEE_ENABLED` al crear el servicio (`sync: false`): usar
+`false` hasta completar el registro y añadir el Secret File; después cambiarlo a
+`true` en Render. En servicios existentes, configurar este valor desde Environment.
+Las sincronizaciones de Git no sobrescriben esa elección. Si la variable falta,
+la aplicación mantiene Earth Engine desactivado por defecto.
 No se necesita ninguna clave OpenAI. Configuración del proyecto, uso comercial
 o no comercial y cuotas son propios de Google Earth Engine.
 
