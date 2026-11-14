@@ -37,7 +37,10 @@ No se inventó un dataset lunar ni información térmica.
 - [Estrategia geoespacial, fuentes y límites](docs/DATA_STRATEGY.md)
 
 `render.yaml` instala solo `requirements-api.txt` para evitar Streamlit, pandas,
-GDAL o rásteres en el servicio web. La configuración CORS acepta únicamente
+GDAL o rásteres en el servicio web y despliega el backend desde `main` en Render.
+`vercel.json` desactiva los despliegues Git automáticos de este repositorio en
+Vercel; el frontend se aloja en un proyecto independiente.
+La configuración CORS acepta únicamente
 orígenes exactos declarados en `CORS_ORIGINS`; vacía no habilita ningún origen.
 No se permite `*`, tampoco para previews Vercel.
 

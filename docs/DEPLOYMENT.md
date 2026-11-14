@@ -1,15 +1,24 @@
-# Render + Vercel
+# Backend en Render; frontend en Vercel
 
 ## Backend
 
-Crear un Web Service desde la rama revisada, o usar el Blueprint `render.yaml`.
-No se despliega ni se fusiona automáticamente por crear este cambio.
+Este repositorio contiene el backend Python. Crear en Render un **Blueprint**
+conectado a `SuperGallinazo27/velkaris-prometheus`, rama **main**, archivo
+`render.yaml`. El servicio `prometheus-api` queda ligado explícitamente a `main`
+y despliega automáticamente sus nuevos commits (`autoDeployTrigger: commit`).
+El archivo configura el servicio cuando Render lo importa; guardarlo en GitHub
+no crea por sí solo un servicio ni migra un proyecto existente de Vercel.
+
+Si el Web Service ya existe y se creó manualmente, configurar los valores de la
+tabla en su panel o vincularlo mediante un Blueprint. Confirmar que su rama sea
+`main`. No crear un segundo servicio si ya hay uno para este backend.
 
 | Configuración | Valor |
 |---|---|
 | Runtime | Python |
 | Python | `3.14.10` (versión usada en las pruebas locales) |
 | Root Directory | raíz del repositorio |
+| Branch | `main` |
 | Build | `pip install -r requirements-api.txt` |
 | Start | `uvicorn api.main:app --host 0.0.0.0 --port $PORT --workers 1 --limit-concurrency 32 --timeout-keep-alive 5` |
 | Health Check | `/health` |
@@ -18,6 +27,22 @@ No se despliega ni se fusiona automáticamente por crear este cambio.
 Configuración basada en [FastAPI en Render](https://render.com/docs/deploy-fastapi),
 [Blueprints](https://render.com/docs/blueprint-spec) y
 [versión de Python](https://render.com/docs/python-version).
+
+## Evitar builds del backend en Vercel
+
+El `vercel.json` de la raíz establece `git.deploymentEnabled: false` para detener
+despliegues automáticos Git de este backend, tanto de ramas como de `main`.
+Esto no borra despliegues existentes ni bloquea despliegues manuales.
+La conexión Git de un proyecto Vercel puede generar builds independientemente
+de `render.yaml`; por eso un fallo de `vercel build` no es un despliegue Render.
+[Configuración Git de Vercel](https://vercel.com/docs/project-configuration/git-configuration).
+
+El frontend debe mantenerse en su propio proyecto/repositorio Vercel y consumir
+la URL HTTPS del backend Render mediante `NEXT_PUBLIC_API_URL`. Este repositorio
+no contiene una aplicación frontend Vercel. Para desvincularlo también en el
+panel, usar Project Settings → Git → Disconnect en el proyecto Vercel del backend.
+
+## Variables del backend
 
 Variables:
 
