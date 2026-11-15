@@ -19,3 +19,14 @@ services:
       # and adding its service-account Secret File. Git syncs preserve this value.
       - key: GEE_ENABLED
         sync: false
+      # Accounts: pooled PostgreSQL URL and the first administrator (created once,
+      # while no admin exists). Without DATABASE_URL the account routes answer 503.
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Copilot: Gemini key from Google AI Studio. Without it the assistant answers 503.
+      - key: GEMINI_API_KEY
+        sync: false

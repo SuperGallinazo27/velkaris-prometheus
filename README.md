@@ -15,7 +15,33 @@ muestrea coordenadas o nueve centros de una zona y reduce NASADEM/MODIS en la nu
 Requiere activar el proyecto y sus credenciales en Render; no se verificó acceso
 real con una cuenta Google en esta entrega. [Integración y activación GEE](docs/EARTH_ENGINE.md).
 
+La API incluye además **cuentas de usuario** sobre PostgreSQL: inicio de sesión
+con token bearer, alta de agencias mediante contraseña temporal y administración
+de usuarios. Son opcionales: sin `DATABASE_URL` esas rutas responden 503 y el
+análisis sigue siendo público. [Contrato y puesta en marcha](docs/ACCOUNTS.md).
+
+Sobre esas cuentas funcionan tres servicios más, que usa el frontend:
+
+- **Portal de turnos.** Una agencia reserva un lugar análogo para unos días; el
+  servidor impide que dos coincidan y no deja reservar dentro de un área de
+  protección estricta, según la base mundial de áreas protegidas (WDPCA). El
+  administrador ve todos los turnos, puede cancelarlos y cerrar o habilitar
+  lugares. [Contrato y reglas](docs/TURNOS.md).
+- **Copiloto (IA).** `POST /api/v1/assistant/ask` explica un lugar, responde
+  preguntas y redacta el resumen de un plan con Gemini, solo a partir de los datos
+  que envía la pantalla. Necesita `GEMINI_API_KEY`; sin ella responde 503 y lo
+  demás sigue funcionando. La IA explica y redacta, no calcula.
+- **El Niño / La Niña.** `GET /api/v1/climate/enso` entrega el índice ONI y la
+  temperatura semanal del mar de NOAA, que el navegador no puede leer por sí mismo.
+
+Los dos últimos están descritos en [docs/API.md](docs/API.md).
+
 ## API: inicio rápido
+
+En Windows, con el entorno `.venv` y el archivo `.env` ya preparados (ver
+[docs/ACCOUNTS.md](docs/ACCOUNTS.md)), basta con **doble clic en `iniciar-api.cmd`**:
+enciende la API en `http://127.0.0.1:8000` con el Python de esta carpeta. Es la que
+necesita el frontend; la aplicación Streamlit (`app.py`) es otra cosa y no la sustituye.
 
 ```bash
 python3 -m venv .venv
@@ -37,6 +63,7 @@ Documentación interactiva: `http://localhost:8000/docs`; contrato OpenAPI:
 No se inventó un dataset lunar ni información térmica.
 
 - [Contrato, respuestas, datos externos y frontend](docs/API.md)
+- [Cuentas, sesiones y administración de usuarios](docs/ACCOUNTS.md)
 - [Render, variables de entorno y comprobación](docs/DEPLOYMENT.md)
 - [Estrategia geoespacial, fuentes y límites](docs/DATA_STRATEGY.md)
 

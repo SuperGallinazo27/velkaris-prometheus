@@ -1,2 +1,4 @@
 -r requirements.txt
 pytest==9.2.0
+# Development only: lets "uvicorn --env-file .env" read a local file. The app never loads .env itself.
+python-dotenv==1.2.4

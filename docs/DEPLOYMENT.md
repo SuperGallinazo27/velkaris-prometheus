@@ -54,17 +54,41 @@ Variables:
 - `PROMETHEUS_DATASET_PATH`: opcional, ruta de un JSON reducido validado, por
   ejemplo un Secret File de Render `/etc/secrets/descriptors.json`.
   No apunta a una URL y no habilita automáticamente el modo externo.
+- `DATABASE_URL`: opcional, URL de PostgreSQL para las cuentas. Con Neon, usar
+  la cadena *pooled*. Sin ella, `/auth` y `/users` responden 503
+  `auth_not_configured` y el resto de la API funciona.
+- `ADMIN_EMAIL` y `ADMIN_PASSWORD` (8 a 128 caracteres): primer administrador.
+  Se crea al arrancar solo si no existe ninguno; después no se vuelve a aplicar
+  y `ADMIN_PASSWORD` puede retirarse.
+- `SESSION_HOURS` (12) y `TEMPORARY_PASSWORD_DAYS` (7): opcionales.
+- `GEMINI_API_KEY`: opcional, clave de Google AI Studio para el copiloto
+  (`POST /api/v1/assistant/ask`). Sin ella, esa ruta responde 503
+  `assistant_not_configured` y lo demás sigue funcionando. Es un secreto: va solo
+  aquí, nunca en el frontend. `GEMINI_MODEL` (por defecto `gemini-3.5-flash`),
+  `GEMINI_FALLBACK_MODEL` (`gemini-flash-lite-latest`) y `ASSISTANT_HOURLY_LIMIT`
+  (40 consultas por cuenta y hora) son opcionales.
 
-El Blueprint solicita `CORS_ORIGINS` durante su configuración (`sync: false`).
+El Blueprint solicita `CORS_ORIGINS`, `DATABASE_URL`, `ADMIN_EMAIL`,
+`ADMIN_PASSWORD` y `GEMINI_API_KEY` durante su configuración (`sync: false`); sus valores no se
+guardan en el repositorio. Las tablas se crean en el primer arranque. Contrato,
+comandos de operación y notas de seguridad en [ACCOUNTS.md](ACCOUNTS.md).
+
 Cada preview Vercel debe aprobarse mediante su origen exacto; no usar regex para
 todos los subdominios `.vercel.app`. No se permiten cookies/credentials CORS.
-Los métodos permitidos son GET/POST y la cabecera de petición Content-Type.
+Los métodos permitidos son GET/POST/PATCH/DELETE y las cabeceras de petición
+Content-Type y Authorization.
 Comportamiento conforme a [CORS de FastAPI](https://fastapi.tiangolo.com/tutorial/cors/).
 
 CORS controla el acceso desde navegadores; no es autenticación ni impide llamadas
-desde curl/servidores. Antes de habilitar consultas científicas con cuota o coste,
-añadir autenticación y rate limiting en el gateway. La configuración predeterminada
-mantiene Earth Engine desactivado; habilitarlo sí permite consultas a Google.
+desde curl/servidores. Las cuentas protegen solo `/auth` y `/users`: las rutas de
+análisis siguen siendo públicas. Antes de habilitar consultas científicas con cuota
+o coste, exigir sesión en ellas o añadir autenticación y rate limiting en el gateway.
+La configuración predeterminada mantiene Earth Engine desactivado; habilitarlo sí
+permite consultas a Google.
+
+El servicio debe seguir con un solo worker (`--workers 1`): el límite de intentos
+de login vive en la memoria del proceso. Cada hash de contraseña usa unos 32 MiB
+y tarda más en una instancia pequeña; se calculan dos como máximo a la vez.
 
 Google Earth Engine está implementado pero desactivado inicialmente. Para activarlo
 después, configurar el proyecto, Secret File y variables de [EARTH_ENGINE.md](EARTH_ENGINE.md).
@@ -82,6 +106,10 @@ esa configuración; las pruebas automatizadas no consumen datos ni cuotas Google
    el origen aprobado sí debe ser legible por el frontend.
 5. Solicitar `external` sin configurar datos: 503 explícito. La demo sigue
    disponible por petición, aunque el archivo externo esté ausente o inválido.
+6. Con `DATABASE_URL` configurada: `GET /health` incluye `accounts_configured=true`
+   y `POST /api/v1/auth/login` con el administrador responde 200. Un 503
+   `database_unavailable` indica que la base de datos no respondió; los registros
+   del servicio anotan la clase del error, sin la URL.
 
 No instalar geopandas/rasterio/GDAL en el servicio por anticipación. Los cálculos
 actuales operan sobre unos pocos descriptores. Procesamiento pesado y generación
@@ -98,5 +126,6 @@ python -m pip check
 
 La suite incluye regresión del núcleo/Streamlit, equivalencia del ranking,
 pesos, Top 3, GeoJSON, Luna externa, nulos/nodata, CORS exacto, límites y timeouts.
+Las cuentas se prueban sobre SQLite en memoria, sin PostgreSQL ni red.
 Los transportes se prueban con respuestas simuladas; no equivalen a una consulta
 real a NASA, ESA, JAXA o CSA. `docs/VERIFICATION_API.md` registra la ejecución.
