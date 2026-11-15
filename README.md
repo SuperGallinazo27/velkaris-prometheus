@@ -1,5 +1,14 @@
 # VELKARIS — PROMETHEUS
 
+**Repositorios del proyecto** (se necesitan los dos):
+
+| Parte | Repositorio |
+|---|---|
+| Frontend (la web: React + TypeScript + Vite) | https://github.com/SuperGallinazo27/frontend-velkaris-prometheus |
+| Backend (este: API FastAPI + PostgreSQL; cuentas, turnos, copiloto IA con Gemini, El Niño) | https://github.com/SuperGallinazo27/velkaris-prometheus |
+
+La web usa la **API FastAPI** de este repositorio (ver «API: inicio rápido» y `docs/`). La aplicación Streamlit descrita abajo es el prototipo inicial con datos de ejemplo.
+
 MVP local en Python + Streamlit: selección de tres regiones marcianas, comparación
 topográfica con tres candidatos terrestres, mapa, ranking y exportación CSV.
 **Todos los datos incluidos son demostrativos y sintéticos.** No contiene datos
