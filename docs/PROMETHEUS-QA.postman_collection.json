@@ -1,0 +1,111 @@
+{
+  "info": {
+    "name": "PROMETHEUS QA · Cuentas",
+    "description": "Registro e inicio de sesión contra la API de QA. Orden: 1 Salud → 2 Login admin → 3 Crear agencia → 4 Login con la temporal → 5 Completar registro → 6 Login con la clave propia → 7 Quién soy. El token de cada login se guarda solo en la variable {{token}} (o {{admin_token}}).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://prometheus-api-5zqo.onrender.com" },
+    { "key": "admin_email", "value": "" },
+    { "key": "admin_password", "value": "" },
+    { "key": "agency_email", "value": "agencia.prueba@example.org" },
+    { "key": "temporary_password", "value": "Temporal-2026" },
+    { "key": "agency_password", "value": "MiClave-Segura-2026" },
+    { "key": "admin_token", "value": "" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Salud del servidor",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+    },
+    {
+      "name": "2. Iniciar sesión (administrador)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["if (pm.response.code === 200) pm.collectionVariables.set('admin_token', pm.response.json().token);"] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}" }
+      }
+    },
+    {
+      "name": "3. Crear agencia (solo administrador)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/users",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{agency_email}}\",\n  \"temporary_password\": \"{{temporary_password}}\"\n}" }
+      }
+    },
+    {
+      "name": "4. Iniciar sesión con la contraseña temporal",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["if (pm.response.code === 200) pm.collectionVariables.set('token', pm.response.json().token);"] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{agency_email}}\",\n  \"password\": \"{{temporary_password}}\"\n}" }
+      }
+    },
+    {
+      "name": "5. Completar registro (clave propia y perfil)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/auth/registration",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"password\": \"{{agency_password}}\",\n  \"profile\": {\n    \"full_name\": \"Ana Pérez\",\n    \"position\": \"Jefa de pruebas de campo\",\n    \"agency\": \"Agencia Espacial de Prueba\",\n    \"acronym\": \"AEP\",\n    \"country\": \"Ecuador\"\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Iniciar sesión (agencia, clave propia)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["if (pm.response.code === 200) pm.collectionVariables.set('token', pm.response.json().token);"] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{agency_email}}\",\n  \"password\": \"{{agency_password}}\"\n}" }
+      }
+    },
+    {
+      "name": "7. Quién soy",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/auth/me"
+      }
+    },
+    {
+      "name": "8. Cerrar sesión",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/v1/auth/logout"
+      }
+    }
+  ]
+}
